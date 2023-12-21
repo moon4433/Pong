@@ -14,6 +14,7 @@ class Pong extends Phaser.Scene {
 
     this.playerOneScore = 0;
     this.playerTwoScore = 0;
+    this.goal = false;
     this.playerOneScoreText = this.add.text(200, 75, this.playerOneScore, {
       fontFamily: "'Lato', sans-serif",
       fontSize: "75px",
@@ -49,8 +50,98 @@ class Pong extends Phaser.Scene {
     this.physics.add.existing(this.playerTwoPaddle);
     this.playerTwoPaddle.body.immovable = true;
     this.playerTwoPaddle.body.setCollideWorldBounds(true);
+
+    this.ball = this.add.circle(400, 300, 5, 0xffffff);
+    this.physics.add.existing(this.ball);
+    this.ball.body.setCircle(5);
+    this.ball.body.setCollideWorldBounds(true);
+    this.ball.body.setBounce(1);
+    this.ballSpeed = 250;
+    this.plusOrMinus = Math.random() < 0.5 ? -1 : 1;
+    this.randomDirection = Math.random() < 0.5 ? 0 : this.ballSpeed;
+    this.ball.body.setVelocity(
+      -this.ballSpeed,
+      this.randomDirection * this.plusOrMinus
+    );
+    this.MAX_ANGLE = 45;
+
+    this.physics.add.collider(
+      this.playerOnePaddle,
+      this.ball,
+      this.calcBallBounce
+    );
+
+    this.physics.add.collider(
+      this.playerTwoPaddle,
+      this.ball,
+      this.calcBallBounce
+    );
   }
-  update() {}
+  update() {
+    // this.playerOnePaddle.body.y = this.ball.body.y - 20;
+    this.calcPlayerTwoPosition(this.playerTwoPaddle.body, this.ball.body);
+    this.checkForGoal(this.ball.body);
+  }
+  calcBallBounce(paddle, ball) {
+    if (paddle.y + 5 < ball.y) {
+      ball.body.velocity.y = 250;
+    } else if (paddle.y + 5 >= ball.y && paddle.y - 5 <= ball.y) {
+      ball.body.velocity.y = 0;
+    } else if (paddle.y - 5 > ball.y) {
+      ball.body.velocity.y = -250;
+    }
+  }
+  calcPlayerTwoPosition(player2Paddle, ball) {
+    // player2Paddle.y = ball.y - 20;
+    if (ball?.y > player2Paddle.y + 20) {
+      player2Paddle.y += 3.9;
+    }
+    if (ball?.y < player2Paddle.y + 20) {
+      player2Paddle.y -= 3.9;
+    }
+  }
+  checkForGoal(ball) {
+    if (ball?.x + 5 < 0 && this.goal === false) {
+      this.goal = true;
+      console.log("Player 2 scored");
+      this.ball.destroy();
+      this.playerTwoScore += 1;
+      this.playerTwoScoreText.text = this.playerTwoScore;
+      this.spawnNewBall();
+    }
+    if (ball?.x - 5 > 800 && this.goal === false) {
+      console.log("Player 1 scored");
+      this.goal = true;
+      this.ball.destroy();
+      this.playerOneScore += 1;
+      this.playerOneScoreText.text = this.playerOneScore;
+      this.spawnNewBall();
+    }
+  }
+  spawnNewBall() {
+    setTimeout(() => {
+      this.ball = this.add.circle(400, 300, 5, 0xffffff);
+      this.physics.add.existing(this.ball);
+      this.ball.body.setCircle(5);
+      this.ball.body.setCollideWorldBounds(true);
+      this.ball.body.setBounce(1);
+      this.ballSpeed = 250;
+      this.plusOrMinus = Math.random() < 0.5 ? -1 : 1;
+      this.randomDirection = Math.random() < 0.5 ? 0 : this.ballSpeed;
+      this.ball.body.setVelocity(
+        -this.ballSpeed,
+        this.randomDirection * this.plusOrMinus
+      );
+      this.physics.add.collider(
+        this.playerOnePaddle,
+        this.ball,
+        this.calcBallBounce
+      );
+
+      this.physics.add.collider(this.playerTwoPaddle, this.ball);
+      this.goal = false;
+    }, 1000);
+  }
 }
 
 const config = {
@@ -60,9 +151,9 @@ const config = {
   physics: {
     default: "arcade",
     arcade: {
+      // debug: true,
       gravity: {
         y: 0,
-        debug: true,
       },
     },
   },
