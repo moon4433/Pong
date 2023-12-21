@@ -51,6 +51,7 @@ class Pong extends Phaser.Scene {
     this.playerTwoPaddle.body.immovable = true;
     this.playerTwoPaddle.body.setCollideWorldBounds(true);
 
+    setTimeout(() => {}, 1000);
     this.ball = this.add.circle(400, 300, 5, 0xffffff);
     this.physics.add.existing(this.ball);
     this.ball.body.setCircle(5);
@@ -63,13 +64,15 @@ class Pong extends Phaser.Scene {
       -this.ballSpeed,
       this.randomDirection * this.plusOrMinus
     );
-    this.MAX_ANGLE = 45;
+    this.ball.destroy();
+    this.spawnNewBall();
 
     this.physics.add.collider(
       this.playerOnePaddle,
       this.ball,
       this.calcBallBounce
     );
+    this.MAX_ANGLE = 45;
 
     this.physics.add.collider(
       this.playerTwoPaddle,
